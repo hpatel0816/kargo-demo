@@ -89,11 +89,11 @@ spec:
     - stageSelector:
         matchLabels:
           env: test
-      autoPromotionEnabled: false
+      autoPromotionEnabled: true
     - stageSelector:
         matchLabels:
           env: uat
-      autoPromotionEnabled: false
+      autoPromotionEnabled: true
     - stageSelector:
         matchLabels:
           env: prod
@@ -116,6 +116,9 @@ spec:
   verification:
     analysisTemplates:
       - name: backend-health
+    args:
+      - name: stage
+        value: test
   promotionTemplate:
     spec:
       steps:
@@ -140,6 +143,9 @@ spec:
   verification:
     analysisTemplates:
       - name: backend-health
+    args:
+      - name: stage
+        value: uat
   promotionTemplate:
     spec:
       steps:
