@@ -1,8 +1,8 @@
 namespace: kargo-demo-test
 
 Backend:
-  Version: 1.0.1
+  Version: 1.0.2
 
 Frontend:
-  Version: 1.0.1
+  Version: 1.0.2
   NodePort: 32093
