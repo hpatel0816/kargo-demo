@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.Backend.ServiceName }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.Backend.ServiceName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.Backend.ServiceName }}
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.Backend.ServiceName }}:{{ .Values.Backend.Version }}"
+          imagePullPolicy: Never
+          ports:
+            - containerPort: {{ .Values.Backend.Port }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.Backend.Port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5

@@ -1,0 +1,7 @@
+namespace: kargo-demo-test
+
+Backend:
+  Version: 1.0.0
+
+Frontend:
+  Version: 1.0.0

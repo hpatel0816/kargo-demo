@@ -1,0 +1,11 @@
+namespace: kargo-demo-test
+
+Backend:
+  Version: 1.0.0
+  ServiceName: kargo-demo-backend
+  Port: 8000
+
+Frontend:
+  Version: 1.0.0
+  ServiceName: kargo-demo-frontend
+  Port: 80

@@ -1,0 +1,153 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  name: kargo-demo
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: kargo-demo-repo
+  namespace: kargo-demo
+  labels:
+    kargo.akuity.io/cred-type: git
+stringData:
+  repoURL: ${GITOPS_REPO_URL}
+  username: ${GITHUB_USERNAME}
+  password: ${GITHUB_PAT}
+---
+# No Warehouse — we create Freight manually via CLI.
+# When wiring to a real registry (ECR/GHCR), a Warehouse would go here.
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: PromotionTask
+metadata:
+  name: helm-override-update
+  namespace: kargo-demo
+spec:
+  vars:
+    - name: repoURL
+      value: ${GITOPS_REPO_URL}
+  steps:
+    - uses: git-clone
+      config:
+        repoURL: ${{ vars.repoURL }}
+        checkout:
+          - branch: main
+            path: ./repo
+
+    - uses: yaml-update
+      as: update
+      config:
+        path: ./repo/stages/${{ ctx.stage }}/overrides.yaml
+        updates:
+          - key: Backend.Version
+            value: ${{ imageFrom("kargo-demo-backend").Tag }}
+          - key: Frontend.Version
+            value: ${{ imageFrom("kargo-demo-frontend").Tag }}
+
+    - uses: git-commit
+      as: commit
+      config:
+        path: ./repo
+        message: "chore: promote kargo-demo to ${{ ctx.stage }} — backend:${{ imageFrom(\"kargo-demo-backend\").Tag }} frontend:${{ imageFrom(\"kargo-demo-frontend\").Tag }}"
+
+    - uses: git-push
+      config:
+        path: ./repo
+
+    - uses: argocd-update
+      config:
+        apps:
+          - name: kargo-demo-${{ ctx.stage }}
+            sources:
+              - repoURL: ${{ vars.repoURL }}
+                desiredRevision: ${{ task.outputs.commit.commit }}
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: ProjectConfig
+metadata:
+  name: kargo-demo
+  namespace: kargo-demo
+spec:
+  promotionPolicies:
+    - stageSelector:
+        matchLabels:
+          env: test
+      autoPromotionEnabled: false
+    - stageSelector:
+        matchLabels:
+          env: uat
+      autoPromotionEnabled: false
+    - stageSelector:
+        matchLabels:
+          env: prod
+      autoPromotionEnabled: false
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: test
+  namespace: kargo-demo
+  labels:
+    env: test
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: kargo-demo
+      sources:
+        direct: true
+  verification:
+    analysisTemplates:
+      - name: backend-health
+  promotionTemplate:
+    spec:
+      steps:
+        - task:
+            name: helm-override-update
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: uat
+  namespace: kargo-demo
+  labels:
+    env: uat
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: kargo-demo
+      sources:
+        stages:
+          - test
+  verification:
+    analysisTemplates:
+      - name: backend-health
+  promotionTemplate:
+    spec:
+      steps:
+        - task:
+            name: helm-override-update
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: kargo-demo
+  labels:
+    env: prod
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: kargo-demo
+      sources:
+        stages:
+          - uat
+  promotionTemplate:
+    spec:
+      steps:
+        - task:
+            name: helm-override-update

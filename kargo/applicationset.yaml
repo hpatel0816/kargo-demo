@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kargo-demo
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - stage: test
+            nodePort: "32090"
+          - stage: uat
+            nodePort: "32091"
+          - stage: prod
+            nodePort: "32092"
+  template:
+    metadata:
+      name: kargo-demo-{{stage}}
+      annotations:
+        kargo.akuity.io/authorized-stage: kargo-demo:{{stage}}
+    spec:
+      project: default
+      sources:
+        - repoURL: ${GITOPS_REPO_URL}
+          targetRevision: main
+          path: chart
+          helm:
+            valueFiles:
+              - $values/stages/{{stage}}/overrides.yaml
+        - repoURL: ${GITOPS_REPO_URL}
+          targetRevision: main
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: kargo-demo-{{stage}}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

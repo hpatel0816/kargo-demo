@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: backend-health
+  namespace: kargo-demo
+spec:
+  args:
+    - name: stage
+  metrics:
+    - name: health-check
+      interval: 10s
+      count: 3
+      failureLimit: 1
+      provider:
+        web:
+          url: "http://kargo-demo-backend.kargo-demo-{{args.stage}}.svc.cluster.local:8000/health"
+          timeoutSeconds: 5
+      successCondition: result.status == "ok"
