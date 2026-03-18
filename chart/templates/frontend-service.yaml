@@ -11,4 +11,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: {{ .Values.Frontend.Port }}
-      nodePort: 32090
+      nodePort: {{ .Values.Frontend.NodePort }}

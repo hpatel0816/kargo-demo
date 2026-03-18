@@ -9,3 +9,4 @@ Frontend:
   Version: 1.0.0
   ServiceName: kargo-demo-frontend
   Port: 80
+  NodePort: 32093

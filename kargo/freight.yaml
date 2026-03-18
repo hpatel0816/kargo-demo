@@ -1,0 +1,13 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Freight
+metadata:
+  name: demo-freight-1.0.0
+  namespace: kargo-demo
+origin:
+  kind: Warehouse
+  name: kargo-demo
+images:
+  - repoURL: kargo-demo-backend
+    tag: "1.0.0"
+  - repoURL: kargo-demo-frontend
+    tag: "1.0.0"

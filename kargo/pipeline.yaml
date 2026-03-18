@@ -16,8 +16,23 @@ stringData:
   username: ${GITHUB_USERNAME}
   password: ${GITHUB_PAT}
 ---
-# No Warehouse — we create Freight manually via CLI.
-# When wiring to a real registry (ECR/GHCR), a Warehouse would go here.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: kargo-demo
+  namespace: kargo-demo
+spec:
+  freightCreationPolicy: Manual
+  interval: 24h
+  subscriptions:
+    - image:
+        repoURL: kargo-demo-backend
+        imageSelectionStrategy: Lexical
+        discoveryLimit: 5
+    - image:
+        repoURL: kargo-demo-frontend
+        imageSelectionStrategy: Lexical
+        discoveryLimit: 5
 ---
 apiVersion: kargo.akuity.io/v1alpha1
 kind: PromotionTask
