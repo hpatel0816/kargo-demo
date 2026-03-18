@@ -95,6 +95,6 @@ describe("App — regressions", () => {
   it("does not crash when all three fields are present", async () => {
     mockFetchSuccess({ message: "m", version: "v", status: "s" });
     render(<App />);
-    await waitFor(() => expect(screen.getByText(/m/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByText(/m/).length).toBeGreaterThan(0));
   });
 });
