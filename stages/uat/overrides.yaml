@@ -1,8 +1,8 @@
 namespace: kargo-demo-uat
 
 Backend:
-  Version: 1.0.0
+  Version: 1.0.1
 
 Frontend:
-  Version: 1.0.0
+  Version: 1.0.1
   NodePort: 32094
